@@ -1,0 +1,201 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER MODELS
+// ============================================
+
+enum UserRole {
+  CUSTOMER
+  STAFF
+  HOTEL_ADMIN
+  PLATFORM_ADMIN
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  firstName     String
+  lastName      String
+  phone         String?
+  role          UserRole  @default(CUSTOMER)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  customerBookings Booking[]      @relation("CustomerBookings")
+  staffBookings   Booking[]      @relation("StaffBookings")
+  hotelAdminHotels Hotel[]        @relation("HotelAdminHotels")
+  reviews         Review[]
+
+  @@map("users")
+}
+
+// ============================================
+// HOTEL MODELS
+// ============================================
+
+model Hotel {
+  id            String    @id @default(uuid())
+  name          String
+  description   String?
+  address       String
+  city          String
+  country       String
+  phone         String
+  email         String
+  rating        Float    @default(0)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  admin         User      @relation(fields: [adminId], references: [id], name: "HotelAdminHotels")
+  adminId       String
+  rooms         Room[]
+  bookings      Booking[]
+  reviews       Review[]
+  amenities     HotelAmenity[]
+
+  @@map("hotels")
+}
+
+model HotelAmenity {
+  id        String   @id @default(uuid())
+  name      String
+  icon      String?
+  hotelId   String
+  hotel     Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  @@unique([hotelId, name])
+  @@map("hotel_amenities")
+}
+
+// ============================================
+// ROOM MODELS
+// ============================================
+
+enum RoomType {
+  SINGLE
+  DOUBLE
+  SUITE
+  FAMILY
+  DELUXE
+}
+
+model Room {
+  id          String    @id @default(uuid())
+  hotelId     String
+  hotel       Hotel     @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  roomNumber  String
+  type        RoomType  @default(SINGLE)
+  price       Float
+  capacity    Int       @default(1)
+  description String?
+  isAvailable Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  bookings    Booking[]
+  amenities   RoomAmenity[]
+
+  @@unique([hotelId, roomNumber])
+  @@map("rooms")
+}
+
+model RoomAmenity {
+  id        String   @id @default(uuid())
+  name      String
+  icon      String?
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, name])
+  @@map("room_amenities")
+}
+
+// ============================================
+// BOOKING MODELS
+// ============================================
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  REFUNDED
+}
+
+model Booking {
+  id            String        @id @default(uuid())
+  hotelId       String
+  hotel         Hotel         @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  roomId        String
+  room          Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  customerId    String
+  customer      User          @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Cascade)
+  staffId       String?
+  staff         User?         @relation("StaffBookings", fields: [staffId], references: [id], onDelete: SetNull)
+  checkInDate   DateTime
+  checkOutDate  DateTime
+  adults        Int           @default(1)
+  children      Int           @default(0)
+  totalPrice    Float
+  status        BookingStatus @default(PENDING)
+  paymentStatus String        @default("PENDING")
+  specialRequests String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  payments      Payment[]
+  reviews       Review[]
+
+  @@map("bookings")
+}
+
+model Payment {
+  id            String    @id @default(uuid())
+  bookingId     String
+  booking       Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amount        Float
+  method        String    // CREDIT_CARD, DEBIT_CARD, CASH, etc.
+  transactionId String?
+  status        String    @default("PENDING")
+  paidAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@map("payments")
+}
+
+// ============================================
+// REVIEW MODELS
+// ============================================
+
+model Review {
+  id        String   @id @default(uuid())
+  bookingId  String?
+  booking    Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  hotelId    String?
+  hotel      Hotel?   @relation(fields: [hotelId], references: [id], onDelete: SetNull)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  @@map("reviews")
+}
