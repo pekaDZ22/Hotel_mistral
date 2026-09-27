@@ -1,7 +1,7 @@
 import express from 'express';
 import { z } from 'zod';
 import { validateRequest } from '../middleware/validation.middleware';
-import { authenticate, authorize } from '../middleware/auth.middleware';
+import { authenticate, authorize, AuthRequest } from '../middleware/auth.middleware';
 import { UserRole } from '@prisma/client';
 import {
   createRoom,
@@ -109,7 +109,7 @@ router.get('/hotel/:hotelId/available', async (req, res, next) => {
 // Create room (HOTEL_ADMIN or PLATFORM_ADMIN only)
 router.post('/', authenticate, authorize([UserRole.HOTEL_ADMIN, UserRole.PLATFORM_ADMIN]),
   validateRequest(createRoomSchema),
-  async (req, res, next) => {
+  async (req: AuthRequest, res, next) => {
     try {
       if (!req.user) {
         return res.status(401).json({ error: 'Unauthorized' });
@@ -127,7 +127,7 @@ router.post('/', authenticate, authorize([UserRole.HOTEL_ADMIN, UserRole.PLATFOR
 );
 
 // Update room
-router.patch('/:id', authenticate, validateRequest(updateRoomSchema), async (req, res, next) => {
+router.patch('/:id', authenticate, validateRequest(updateRoomSchema), async (req: AuthRequest, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -152,7 +152,7 @@ router.patch('/:id', authenticate, validateRequest(updateRoomSchema), async (req
 });
 
 // Delete room
-router.delete('/:id', authenticate, async (req, res, next) => {
+router.delete('/:id', authenticate, async (req: AuthRequest, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });

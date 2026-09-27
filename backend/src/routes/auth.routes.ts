@@ -2,7 +2,7 @@ import express from 'express';
 import { z } from 'zod';
 import { validateRequest } from '../middleware/validation.middleware';
 import { registerUser, loginUser, getCurrentUser } from '../services/auth.service';
-import { authenticate } from '../middleware/auth.middleware';
+import { authenticate, AuthRequest } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
@@ -53,7 +53,7 @@ router.post('/login', validateRequest(loginSchema), async (req, res, next) => {
 });
 
 // Get current user
-router.get('/me', authenticate, async (req, res, next) => {
+router.get('/me', authenticate, async (req: AuthRequest, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });

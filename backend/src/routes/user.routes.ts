@@ -1,8 +1,9 @@
 import express from 'express';
 import { z } from 'zod';
 import { validateRequest } from '../middleware/validation.middleware';
-import { authenticate, authorize } from '../middleware/auth.middleware';
+import { authenticate, authorize, AuthRequest } from '../middleware/auth.middleware';
 import { UserRole } from '@prisma/client';
+import prisma from '../utils/prisma';
 import {
   getAllUsers,
   getUserById,
@@ -27,7 +28,7 @@ const updateUserSchema = z.object({
 });
 
 // Get all users (PLATFORM_ADMIN only)
-router.get('/', authenticate, authorize([UserRole.PLATFORM_ADMIN]), async (req, res, next) => {
+router.get('/', authenticate, authorize([UserRole.PLATFORM_ADMIN]), async (req: AuthRequest, res, next) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
@@ -43,7 +44,7 @@ router.get('/', authenticate, authorize([UserRole.PLATFORM_ADMIN]), async (req, 
 });
 
 // Get current user's staff by hotel (HOTEL_ADMIN only)
-router.get('/staff/hotel/:hotelId', authenticate, authorize([UserRole.HOTEL_ADMIN]), async (req, res, next) => {
+router.get('/staff/hotel/:hotelId', authenticate, authorize([UserRole.HOTEL_ADMIN]), async (req: AuthRequest, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -72,7 +73,7 @@ router.get('/staff/hotel/:hotelId', authenticate, authorize([UserRole.HOTEL_ADMI
 });
 
 // Get user by ID
-router.get('/:id', authenticate, async (req, res, next) => {
+router.get('/:id', authenticate, async (req: AuthRequest, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -105,7 +106,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
 });
 
 // Update user
-router.patch('/:id', authenticate, validateRequest(updateUserSchema), async (req, res, next) => {
+router.patch('/:id', authenticate, validateRequest(updateUserSchema), async (req: AuthRequest, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -130,7 +131,7 @@ router.patch('/:id', authenticate, validateRequest(updateUserSchema), async (req
 });
 
 // Delete user
-router.delete('/:id', authenticate, async (req, res, next) => {
+router.delete('/:id', authenticate, async (req: AuthRequest, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -148,7 +149,7 @@ router.delete('/:id', authenticate, async (req, res, next) => {
 });
 
 // Assign staff to hotel (HOTEL_ADMIN or PLATFORM_ADMIN only)
-router.post('/:staffId/assign-hotel/:hotelId', authenticate, authorize([UserRole.HOTEL_ADMIN, UserRole.PLATFORM_ADMIN]), async (req, res, next) => {
+router.post('/:staffId/assign-hotel/:hotelId', authenticate, authorize([UserRole.HOTEL_ADMIN, UserRole.PLATFORM_ADMIN]), async (req: AuthRequest, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -164,8 +165,5 @@ router.post('/:staffId/assign-hotel/:hotelId', authenticate, authorize([UserRole
     next(error);
   }
 });
-
-// Import prisma for staff verification
-import prisma from '../utils/prisma';
 
 export default router;

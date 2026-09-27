@@ -1,7 +1,7 @@
 import express from 'express';
 import { z } from 'zod';
 import { validateRequest } from '../middleware/validation.middleware';
-import { authenticate } from '../middleware/auth.middleware';
+import { authenticate, AuthRequest } from '../middleware/auth.middleware';
 import { BookingStatus } from '@prisma/client';
 import {
   createBooking,
@@ -42,7 +42,7 @@ const updateBookingSchema = z.object({
 });
 
 // Get all bookings for current user
-router.get('/', authenticate, async (req, res, next) => {
+router.get('/', authenticate, async (req: AuthRequest, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -62,7 +62,7 @@ router.get('/', authenticate, async (req, res, next) => {
 });
 
 // Get booking by ID
-router.get('/:id', authenticate, async (req, res, next) => {
+router.get('/:id', authenticate, async (req: AuthRequest, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -87,7 +87,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
 });
 
 // Create booking (CUSTOMER only)
-router.post('/', authenticate, validateRequest(createBookingSchema), async (req, res, next) => {
+router.post('/', authenticate, validateRequest(createBookingSchema), async (req: AuthRequest, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -112,7 +112,7 @@ router.post('/', authenticate, validateRequest(createBookingSchema), async (req,
 });
 
 // Update booking
-router.patch('/:id', authenticate, validateRequest(updateBookingSchema), async (req, res, next) => {
+router.patch('/:id', authenticate, validateRequest(updateBookingSchema), async (req: AuthRequest, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -137,7 +137,7 @@ router.patch('/:id', authenticate, validateRequest(updateBookingSchema), async (
 });
 
 // Delete booking
-router.delete('/:id', authenticate, async (req, res, next) => {
+router.delete('/:id', authenticate, async (req: AuthRequest, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -155,7 +155,7 @@ router.delete('/:id', authenticate, async (req, res, next) => {
 });
 
 // Confirm booking (for staff or hotel admin)
-router.patch('/:id/confirm', authenticate, async (req, res, next) => {
+router.patch('/:id/confirm', authenticate, async (req: AuthRequest, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -193,7 +193,7 @@ router.patch('/:id/confirm', authenticate, async (req, res, next) => {
 });
 
 // Check in booking
-router.patch('/:id/checkin', authenticate, async (req, res, next) => {
+router.patch('/:id/checkin', authenticate, async (req: AuthRequest, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -230,7 +230,7 @@ router.patch('/:id/checkin', authenticate, async (req, res, next) => {
 });
 
 // Check out booking
-router.patch('/:id/checkout', authenticate, async (req, res, next) => {
+router.patch('/:id/checkout', authenticate, async (req: AuthRequest, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -267,7 +267,7 @@ router.patch('/:id/checkout', authenticate, async (req, res, next) => {
 });
 
 // Cancel booking
-router.patch('/:id/cancel', authenticate, async (req, res, next) => {
+router.patch('/:id/cancel', authenticate, async (req: AuthRequest, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });
